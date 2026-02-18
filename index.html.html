@@ -1,0 +1,849 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Eiikb小手机测试版玩美化</title>
+    <style>
+        :root {
+            --matcha-bg: #ffffff;
+            --gradient-start: #ffffff;
+            --gradient-end: #f0f0f0;
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --text-color: #333333; 
+            --accent-green: #C6C6C6;
+            --icon-white: rgba(255, 255, 255, 0.25);
+            --icon-light-green: #E2E2E2;
+            --list-item-bg: rgba(255, 255, 255, 0.5);
+            --list-text: #333333; 
+            --toggle-bg: #ccc;
+            --toggle-active: #C6C6C6;
+            --font-scale: 100%;
+            --current-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            --ui-color: #333333;
+        }
+        body.dark-mode {
+            --matcha-bg: #1a261a; --gradient-start: #1a261a; --gradient-end: #0f140f;
+            --glass-bg: rgba(0, 0, 0, 0.4); --glass-border: rgba(255, 255, 255, 0.1);
+            --text-color: #e0e0e0; --accent-green: #6a8e61; --icon-white: rgba(45, 59, 45, 0.3);
+            --icon-light-green: #4a5e45; --list-item-bg: rgba(255, 255, 255, 0.1);
+            --list-text: #a8c69f; --toggle-bg: #444; --toggle-active: #6a8e61; --ui-color: #e0e0e0; 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--current-font); -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--matcha-bg);
+            background-image: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column;
+            color: var(--text-color); background-size: cover; background-position: center;
+            transition: background 0.3s ease; font-size: var(--font-scale);
+        }
+        .status-bar {
+            height: 44px; padding: 0 20px; display: flex; justify-content: space-between;
+            align-items: center; font-size: 14px; font-weight: 600; z-index: 100; color: var(--ui-color);
+        }
+        .battery-container { display: flex; align-items: center; gap: 4px; }
+        .battery-icon {
+            width: 22px; height: 11px; border: 1px solid var(--ui-color); border-radius: 2px;
+            padding: 1px; position: relative; display: flex; align-items: center;
+        }
+        .battery-icon::after {
+            content: ''; position: absolute; right: -2px; top: 50%; transform: translateY(-50%);
+            width: 1px; height: 4px; background: var(--ui-color);
+        }
+        .battery-level { height: 100%; background: var(--ui-color); width: 50%; }
+        .screen-content {
+            flex: 1; padding: 5px 20px; display: flex; flex-direction: column;
+            justify-content: flex-start; gap: 22px; padding-bottom: 100px;
+        }
+        .cake-widget {
+            width: 100%; aspect-ratio: 4/1; border-radius: 20px; position: relative; overflow: hidden;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+            margin-bottom: -10px; border: none; background: transparent; box-shadow: none; /* 去掉玻璃质感 */
+        }
+        .cake-bg {
+            position: absolute; inset: 0; background-size: cover; background-position: center;
+            z-index: 1; cursor: pointer; opacity: 0.8; background-color: transparent; pointer-events: auto;
+        }
+        .date-container { position: relative; z-index: 3; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; pointer-events: none; }
+        .date-display-large { font-size: 24px; font-weight: 400; color: #333; line-height: 1; pointer-events: none; }
+        .week-display { font-size: 14px; margin-top: 5px; color: #555; font-weight: 500; pointer-events: none; }
+        .cake-lace {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 10px;
+            background-image: radial-gradient(circle, white 6px, transparent 7px);
+            background-size: 16px 16px; background-position: bottom left; background-repeat: repeat-x;
+            z-index: 2; opacity: 0.8; pointer-events: none; transform: scaleY(-1); /* 垂直翻转 */
+        }
+        .cake-content { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 2px; pointer-events: none; }
+        .cake-title { font-size: 18px; color: #000000; font-weight: 400; cursor: pointer; letter-spacing: 0.5px; pointer-events: auto; }
+        .cake-subtitle { font-size: 10px; color: #555555; cursor: pointer; font-weight: 300; opacity: 0.8; margin-bottom: 4px; pointer-events: auto; }
+        .cake-footer { display: flex; align-items: center; justify-content: flex-end; width: 100%; }
+        .widget-battery { width: 18px; height: 9px; border: 1px solid #333; border-radius: 2px; padding: 1px; position: relative; display: flex; align-items: center; }
+        .widget-battery-level { height: 100%; background: #333; width: 50%; }
+        .widget-battery::after { content: ''; position: absolute; right: -2px; top: 2px; width: 1px; height: 3px; background: #333; }
+        .app-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px; width: 100%; }
+        .app-item { display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+        .app-icon {
+            width: 55px; height: 55px; border-radius: 14px; display: flex; align-items: center;
+            justify-content: center; margin-bottom: 5px; backdrop-filter: blur(5px);
+            border: 1px solid var(--glass-border); transition: transform 0.1s;
+            background-size: cover; background-position: center; overflow: hidden;
+            background-color: var(--glass-bg); color: var(--ui-color);
+        }
+        .app-item:active .app-icon { transform: scale(0.95); }
+        .app-name { font-size: 10px; opacity: 0.9; color: var(--ui-color); }
+        .zone-top { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; aspect-ratio: 2/1; margin-top: 5px; }
+        .widget-image-container { position: relative; width: 100%; height: 100%; }
+        .widget-image { width: 100%; height: 100%; border-radius: 20px; background-size: cover; background-position: center; border: 1px solid var(--glass-border); cursor: pointer; }
+        .widget-label { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 10px; white-space: nowrap; color: var(--ui-color); }
+        .zone-middle { display: flex; align-items: center; width: 100%; }
+        .profile-card {
+            width: 100%; aspect-ratio: 2.1 / 1; border-radius: 24px; background-size: cover;
+            background-position: center; position: relative; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; border: 1px solid var(--glass-border);
+        }
+        .profile-card::before { content: ''; position: absolute; inset: 0; pointer-events: none; }
+        .profile-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; pointer-events: none; }
+        .avatar, .nickname, .uid-row, .signature, .location-row { pointer-events: auto; }
+        .avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid white; background-size: cover; background-position: center; margin-bottom: 5px; cursor: pointer; }
+        .nickname { font-size: 22px; font-weight: 800; margin-bottom: 2px; color: var(--text-color); cursor: pointer; letter-spacing: 0.5px; }
+        .uid-row { display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--text-color); opacity: 0.8; cursor: pointer; height: 12px; margin-bottom: 3px; }
+        .signature { font-size: 12px; margin: 2px 0; color: var(--text-color); opacity: 0.9; cursor: pointer; font-weight: 500; }
+        .location-row { display: flex; align-items: center; justify-content: center; font-size: 10px; margin-top: 4px; cursor: pointer; color: var(--text-color); opacity: 0.8; }
+        .loc-icon { width: 10px; height: 10px; margin-right: 3px; fill: var(--text-color); }
+        .zone-bottom-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; aspect-ratio: 2/1; margin-top: 5px; }
+        .music-widget { width: 100%; height: 100%; position: relative; perspective: 1000px; }
+        .music-card-inner { width: 100%; height: 100%; position: relative; transition: transform 0.8s; transform-style: preserve-3d; }
+        .music-card-inner.flipped { transform: rotateY(180deg); }
+        .music-front, .music-back {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            border-radius: 20px; background: var(--glass-bg); backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 10px; cursor: pointer;
+        }
+        .music-back { transform: rotateY(180deg); padding: 15px; text-align: center; justify-content: flex-start; overflow: hidden; }
+        .vinyl-record {
+            width: 70px; height: 70px; border-radius: 50%; background: #111; border: 2px solid #ffffff; 
+            display: flex; align-items: center; justify-content: center; animation: rotate 5s linear infinite;
+            animation-play-state: paused; background-size: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer;
+        }
+        .vinyl-record.playing { animation-play-state: running; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .music-track-info { margin-top: 10px; font-size: 12px; font-weight: 600; color: var(--ui-color); text-align: center; width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .music-controls { display: flex; gap: 10px; margin-top: 5px; align-items: center; justify-content: center; }
+        .control-btn { width: 14px; height: 14px; fill: var(--ui-color); cursor: pointer; }
+        .play-btn { width: 18px; height: 18px; fill: var(--ui-color); }
+        .music-menu-btn { position: absolute; bottom: 10px; right: 10px; width: 16px; height: 16px; fill: var(--ui-color); opacity: 0.8; z-index: 5; }
+        .progress-bar { width: 80%; margin-top: 5px; display: flex; align-items: center; }
+        input[type="range"].music-progress { width: 100%; height: 3px; -webkit-appearance: none; background: rgba(255,255,255,0.3); border-radius: 2px; outline: none; cursor: pointer; }
+        input[type="range"].music-progress::-webkit-slider-thumb { -webkit-appearance: none; width: 8px; height: 8px; background: var(--ui-color); border-radius: 50%; cursor: pointer; }
+        .lyric-container {
+            width: 100%; height: 100%; overflow-y: auto; scroll-behavior: smooth; padding: 10px 0;
+            mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+        }
+        .lyric-container::-webkit-scrollbar { display: none; }
+        .lyric-line { font-size: 11px; line-height: 2; color: rgba(0,0,0,0.4); transition: all 0.3s; min-height: 20px; }
+        .lyric-line.active { color: var(--ui-color); font-size: 13px; font-weight: bold; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+        .dock {
+            position: fixed; bottom: 20px; left: 20px; right: 20px; height: 85px; background: var(--glass-bg);
+            backdrop-filter: blur(15px); border-radius: 28px; border: 1px solid var(--glass-border);
+            display: flex; justify-content: space-around; align-items: center; padding: 0 10px; z-index: 101;
+        }
+        .theme-overlay {
+            position: fixed; inset: 0; background: var(--glass-bg); backdrop-filter: blur(25px); z-index: 200;
+            display: none; flex-direction: column; padding: 60px 30px; transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .theme-overlay.active { display: flex; transform: translateY(0); }
+        .theme-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; color: var(--accent-green); }
+        .theme-header h2 { font-size: 22px; color: var(--text-color); }
+        .close-theme { font-size: 16px; cursor: pointer; font-weight: bold; color: var(--text-color); }
+        .theme-list { display: flex; flex-direction: column; gap: 15px; }
+        .theme-item {
+            background: var(--list-item-bg); padding: 20px; border-radius: 18px; border: 1px solid var(--glass-border);
+            color: var(--text-color); font-weight: 600; display: flex; justify-content: space-between;
+            align-items: center; font-size: 16px; cursor: pointer;
+        }
+        .sub-page {
+            position: fixed; inset: 0; background: var(--glass-bg); backdrop-filter: blur(25px);
+            z-index: 201; display: none; flex-direction: column; padding: 60px 30px;
+            transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); overflow-y: auto;
+        }
+        .sub-page.active { display: flex; transform: translateX(0); }
+        .music-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .add-music-btn { font-size: 24px; cursor: pointer; color: var(--text-color); }
+        .music-list { display: flex; flex-direction: column; gap: 10px; }
+        .music-item {
+            background: var(--list-item-bg); padding: 12px; border-radius: 12px; display: flex;
+            justify-content: space-between; align-items: center; color: var(--text-color); font-size: 14px;
+            border: 1px solid var(--glass-border);
+        }
+        .music-item.active { border: 1px solid var(--accent-green); background: rgba(255,255,255,0.7); }
+        .music-info { display: flex; flex-direction: column; cursor: pointer; flex: 1; }
+        .music-title { font-weight: bold; font-size: 14px; }
+        .music-artist { font-size: 10px; opacity: 0.8; }
+        .music-actions { display: flex; gap: 5px; }
+        .btn-small { padding: 4px 8px; border-radius: 6px; font-size: 10px; border: none; cursor: pointer; }
+        .toggle-switch {
+            width: 50px; height: 28px; background-color: var(--toggle-bg); border-radius: 14px;
+            position: relative; transition: background-color 0.3s; cursor: pointer;
+        }
+        .toggle-switch.on { background-color: var(--toggle-active); }
+        .toggle-knob {
+            width: 24px; height: 24px; background-color: white; border-radius: 50%;
+            position: absolute; top: 2px; left: 2px; transition: transform 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .toggle-switch.on .toggle-knob { transform: translateX(22px); }
+        .icon-manage-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); gap: 15px 10px; margin-bottom: 30px; }
+        .manage-item { display: flex; flex-direction: column; align-items: center; }
+        .manage-icon {
+            width: 50px; height: 50px; border-radius: 12px; background: rgba(255,255,255,0.3);
+            display: flex; align-items: center; justify-content: center; margin-bottom: 5px;
+            border: 1px solid var(--glass-border); cursor: pointer; overflow: hidden;
+            background-size: cover; background-position: center;
+        }
+        .manage-name { font-size: 10px; color: var(--text-color); }
+        .preset-section { margin-top: 20px; border-top: 1px solid var(--glass-border); padding-top: 20px; }
+        .preset-title { font-size: 16px; margin-bottom: 15px; color: var(--text-color); font-weight: bold; }
+        .preset-list { display: flex; flex-direction: column; gap: 10px; }
+        .preset-item {
+            background: var(--list-item-bg); padding: 15px; border-radius: 12px; display: flex;
+            justify-content: space-between; align-items: center; color: var(--text-color); font-size: 14px;
+        }
+        .preset-actions button { padding: 5px 10px; border: none; border-radius: 8px; font-size: 12px; margin-left: 5px; cursor: pointer; }
+        /* 饱和度为0的阴影修正 */
+        .btn-save-preset, .modal button, .btn-apply, .btn-delete, .btn-edit {
+            background: var(--list-item-bg) !important; border: 1px solid var(--glass-border) !important;
+            color: var(--text-color) !important; backdrop-filter: blur(5px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
+        }
+        .btn-save-preset { width: 100%; padding: 12px; border-radius: 12px; font-weight: bold; margin-bottom: 15px; cursor: pointer; }
+        .font-dropdown {
+            background: var(--list-item-bg); border-radius: 18px; border: 1px solid var(--glass-border);
+            margin-bottom: 15px; overflow: hidden; transition: max-height 0.3s ease;
+        }
+        .font-dropdown-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--text-color); font-weight: 600; }
+        .arrow-icon { transition: transform 0.3s; font-size: 12px; }
+        .font-dropdown.open .arrow-icon { transform: rotate(180deg); }
+        .font-dropdown-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .font-dropdown.open .font-dropdown-content { max-height: 300px; }
+        .font-option { padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); cursor: pointer; color: var(--text-color); font-size: 14px; }
+        .font-option:hover { background: rgba(255,255,255,0.2); }
+        .font-slider-container {
+            background: var(--list-item-bg); padding: 20px; border-radius: 18px;
+            border: 1px solid var(--glass-border); margin-bottom: 15px; color: var(--text-color);
+        }
+        .font-slider-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 600; }
+        input[type=range] { width: 100%; accent-color: var(--accent-green); }
+        .custom-font-input { width: 100%; padding: 10px; border-radius: 10px; border: none; background: rgba(255,255,255,0.5); margin-bottom: 10px; }
+        select.custom-font-input { appearance: none; color: #333; }
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(12px);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal {
+            background: rgba(255, 255, 255, 0.85); width: 80%; max-width: 300px; padding: 20px;
+            border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); border: 1px solid white; text-align: center;
+        }
+        .modal h3 { color: #333; margin-bottom: 10px; }
+        .modal input, .modal select, .modal textarea { width: 100%; padding: 12px; margin: 15px 0; border-radius: 12px; border: none; outline: none; background: rgba(255,255,255,0.6); font-size: 14px; }
+        .modal button { padding: 10px 24px; border-radius: 15px; border: none; color: white; font-weight: bold; cursor: pointer; }
+        .icon-svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+        .bg-white { background: var(--glass-bg); color: var(--text-color); }
+        .bg-green { background: var(--glass-bg); color: var(--text-color); }
+        input[type="file"] { display: none; }
+        
+        /* 微信/世界书 UI */
+        .app-bottom-dock { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; display: flex; justify-content: space-around; align-items: center; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); border-top: 1px solid rgba(0,0,0,0.1); }
+        .dock-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; color: #666; font-size: 10px; cursor: pointer; }
+        .dock-btn.active { color: #07c160; }
+        .world-book-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; color: white; margin-right: 5px; }
+        .tag-global { background: #666; } .tag-local { background: #888; }
+        .tag-high { border: 1px solid #ff4d4d; color: #ff4d4d; } .tag-mid { border: 1px solid #ffa600; color: #ffa600; } .tag-low { border: 1px solid #07c160; color: #07c160; }
+        .wb-item { background: var(--list-item-bg); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--glass-border); }
+    </style>
+</head>
+<body id="body-bg">
+    <audio id="audio-player"></audio>
+    <div class="status-bar">
+        <div id="current-time">12:00</div>
+        <div class="battery-container">
+            <span id="battery-text" style="font-size: 10px;">--%</span>
+            <div class="battery-icon"><div class="battery-level" id="battery-level"></div></div>
+        </div>
+    </div>
+    <div class="screen-content">
+        <div class="cake-widget">
+            <div class="date-container">
+                <div class="date-display-large" id="widget-date-display">1月1日</div>
+                <div class="week-display" id="widget-week-display">星期一</div>
+            </div>
+            <div class="cake-bg" id="cakeBg" onclick="openImageModal('cakeBg')"></div>
+            <div class="cake-lace"></div>
+            <div class="cake-content">
+                <div class="cake-title" id="cakeTitle" onclick="openTextModal('cakeTitle')">Good luck.</div>
+                <div class="cake-subtitle" id="cakeSubtitle" onclick="openTextModal('cakeSubtitle')">✧ Every single day counts.</div>
+                <div class="cake-footer"><div class="widget-battery"><div class="widget-battery-level" id="widget-battery-level"></div></div></div>
+            </div>
+        </div>
+        <div class="zone-top">
+            <div class="app-grid">
+                <div class="app-item"><div class="app-icon bg-white" id="icon-diary"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div><span class="app-name">日记</span></div>
+                <div class="app-item"><div class="app-icon bg-green" id="icon-ins"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37zM17.5 6.5h.01"/></svg></div><span class="app-name">Ins</span></div>
+                <div class="app-item" onclick="toggleWechatPage(true)"><div class="app-icon bg-white" id="icon-wechat"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.4h.9A8.38 8.38 0 0 1 21 11.5z"/></svg></div><span class="app-name">微信</span></div>
+                <div class="app-item"><div class="app-icon bg-green" id="icon-companion"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><span class="app-name">陪伴</span></div>
+            </div>
+            <div class="widget-image-container">
+                <div class="widget-image" id="topWidget" onclick="openImageModal('topWidget')"></div>
+                <span class="widget-label">picture widget</span>
+            </div>
+        </div>
+        <div class="zone-middle">
+            <div class="profile-card" id="profileBg" onclick="openImageModal('profileBg')">
+                <div class="profile-content">
+                    <div class="avatar" id="avatar" onclick="event.stopPropagation(); openImageModal('avatar')"></div>
+                    <div class="nickname" id="nickname" onclick="event.stopPropagation(); openTextModal('nickname')">幼稚栀</div>
+                    <div class="uid-row" onclick="event.stopPropagation(); openTextModal('wechatId')">@<span id="wechatId">771581955</span></div>
+                    <div class="signature" id="signature" onclick="event.stopPropagation(); openTextModal('signature')">你的存在 即是我所爱ovo!!</div>
+                    <div class="location-row" onclick="event.stopPropagation(); openTextModal('location')">
+                        <svg class="loc-icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        <span id="location">京都 江城</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="zone-bottom-container">
+            <div class="music-widget">
+                <div class="music-card-inner" id="music-card">
+                    <div class="music-front" onclick="toggleMusicFlip(event)">
+                        <div class="vinyl-record" id="vinylCover" onclick="event.stopPropagation(); openImageModal('vinylCover')"></div>
+                        <div class="music-track-info" id="musicTrackInfo">歌曲 - 歌手</div>
+                        <div class="music-controls" onclick="event.stopPropagation()">
+                            <svg class="control-btn" viewBox="0 0 24 24" onclick="changeTrack(-1)"><path d="M19 20L9 12l10-8v16zM5 19V5"/></svg>
+                            <svg class="control-btn play-btn" id="play-toggle" viewBox="0 0 24 24" onclick="togglePlay()"><path id="play-path" d="M5 3l14 9-14 9V3z"/></svg>
+                            <svg class="control-btn" viewBox="0 0 24 24" onclick="changeTrack(1)"><path d="M5 4l10 8-10 8V4zM19 5v14"/></svg>
+                        </div>
+                        <div class="progress-bar" onclick="event.stopPropagation()">
+                            <input type="range" class="music-progress" id="musicProgress" value="0" min="0" max="100" oninput="seekAudio(this.value)">
+                        </div>
+                        <svg class="music-menu-btn" viewBox="0 0 24 24" onclick="event.stopPropagation(); toggleMusicList(true)">
+                            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                        </svg>
+                    </div>
+                    <div class="music-back" onclick="toggleMusicFlip(event)"><div class="lyric-container" id="lyricContainer"><div class="lyric-line">暂无歌词</div></div></div>
+                </div>
+                <span class="widget-label" style="bottom: -18px;">Play music</span>
+            </div>
+            <div class="app-grid">
+                <div class="app-item"><div class="app-icon bg-white" id="icon-pet"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2c.5 0 1 .5 1 1v2c0 .6-.4 1-1 1s-1-.4-1-1V3c0-.5.5-1 1-1zM7.5 4c.6 0 1 .4 1 1v1.5c0 .6-.4 1-1 1s-1-.4-1-1V5c0-.6.4-1 1-1zM16.5 4c.6 0 1 .4 1 1v1.5c0 .6-.4 1-1 1s-1-.4-1-1V5c0-.6.4-1 1-1zM5.5 8c.6 0 1 .4 1 1v1.5c0 .6-.4 1-1 1s-1-.4-1-1V9c0-.6.4-1 1-1zM18.5 8c.6 0 1 .4 1 1v1.5c0 .6-.4 1-1 1s-1-.4-1-1V9c0-.6.4-1 1-1zM12 11c-2.8 0-5 2.2-5 5 0 2.2 2 4 4 4 1.5 0 2.8-.8 3.5-2 .7-1.2.5-2.8-.5-3.8-1-1-1.2-3.2-2-3.2z"/></svg></div><span class="app-name">萌宠</span></div>
+                <div class="app-item"><div class="app-icon bg-green" id="icon-shopping"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><span class="app-name">购物</span></div>
+                <div class="app-item"><div class="app-icon bg-green" id="icon-check"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div><span class="app-name">查岗</span></div>
+                <div class="app-item"><div class="app-icon bg-white" id="icon-couple"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><span class="app-name">情侣空间</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="dock">
+        <div class="app-item"><div class="app-icon bg-white" id="icon-memory" style="width:48px;height:48px;margin-bottom:2px;"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="app-name">记忆</span></div>
+        <div class="app-item" onclick="toggleWorldBookPage(true)"><div class="app-icon bg-white" id="icon-world" style="width:48px;height:48px;margin-bottom:2px;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><span class="app-name">世界书</span></div>
+        <div class="app-item" onclick="toggleThemePage(true)"><div class="app-icon bg-white" id="icon-theme" style="width:48px;height:48px;margin-bottom:2px;"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div><span class="app-name">主题</span></div>
+        <div class="app-item" onclick="toggleSettingsPage(true)"><div class="app-icon bg-white" id="icon-settings" style="width:48px;height:48px;margin-bottom:2px;"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><span class="app-name">设置</span></div>
+    </div>
+    
+    <!-- 微信框架页面 -->
+    <div class="sub-page" id="wechatAppPage">
+        <div class="theme-header"><h2>微信</h2><span class="close-theme" onclick="toggleWechatPage(false)">关闭</span></div>
+        <div style="flex:1; display:flex; justify-content:center; align-items:center; opacity:0.5;">暂无新消息</div>
+        <div class="app-bottom-dock">
+            <div class="dock-btn active"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.4h.9A8.38 8.38 0 0 1 21 11.5z"/></svg>消息</div>
+            <div class="dock-btn"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>联系人</div>
+            <div class="dock-btn"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M14.31 8l5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16L3.95 6.06M14.31 16H2.83M16.62 12l-5.74 9.94"/></svg>朋友圈</div>
+            <div class="dock-btn"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>我</div>
+        </div>
+    </div>
+
+    <!-- 世界书App页面 -->
+    <div class="sub-page" id="worldBookPage">
+        <div class="theme-header">
+            <span class="close-theme" onclick="toggleWorldBookPage(false)">&lsaquo; 返回</span><h2>世界书</h2><span class="add-music-btn" onclick="openAddWorldBook()">+</span>
+        </div>
+        <div class="font-slider-container">
+            <div class="font-slider-header">世界书管理</div>
+            <div id="worldBookList"></div>
+        </div>
+    </div>
+
+    <!-- 添加世界书弹窗 -->
+    <div class="modal-overlay" id="addWorldBookOverlay">
+        <div class="modal">
+            <h3>添加世界书</h3>
+            <input type="text" id="wbName" placeholder="条目名称 (如: 魔法设定)">
+            <select id="wbType" class="custom-font-input"><option value="global">全局世界书</option><option value="local">局部世界书</option></select>
+            <select id="wbTrigger" class="custom-font-input"><option value="always">始终生效</option><option value="keyword">关键词生效</option></select>
+            <select id="wbPriority" class="custom-font-input"><option value="high">重要程度: 高</option><option value="mid">重要程度: 中</option><option value="low">重要程度: 低</option></select>
+            <textarea id="wbContent" rows="4" placeholder="详细描述设定..." style="width:100%;padding:10px;border-radius:12px;border:none;background:rgba(255,255,255,0.6);margin-bottom:15px;"></textarea>
+            <div style="display:flex;gap:10px;justify-content:center;">
+                <button onclick="document.getElementById('addWorldBookOverlay').style.display='none'" style="background:#ccc;">取消</button>
+                <button onclick="saveWorldBook()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="theme-overlay" id="settingsPage">
+        <div class="theme-header"><h2>设置</h2><span class="close-theme" onclick="toggleSettingsPage(false)">关闭</span></div>
+        <div class="theme-list">
+            <div class="theme-item" onclick="toggleApiSettingsPage(true)">API设置 <span>&rsaquo;</span></div>
+            <div class="theme-item" onclick="toggleVoiceSettingsPage(true)">语音设置 <span>&rsaquo;</span></div>
+            <div class="theme-item" onclick="toggleDataPage(true)">数据管理 <span>&rsaquo;</span></div>
+        </div>
+    </div>
+    <div class="sub-page" id="apiSettingsPage">
+        <div class="theme-header"><span class="close-theme" onclick="toggleApiSettingsPage(false)">&lsaquo; 返回</span><h2>API设置</h2><span style="width: 32px"></span></div>
+        <div class="font-slider-container"><div class="font-slider-header">API配置</div><input type="text" class="custom-font-input" id="apiUrlInput" placeholder="API网址 (如 https://api.openai.com)"><input type="password" class="custom-font-input" id="apiKeyInput" placeholder="API密钥 (sk-...)"><button class="btn-save-preset" onclick="fetchModels()">拉取模型</button></div>
+        <div class="font-slider-container"><div class="font-slider-header">模型选择</div><select class="custom-font-input" id="modelSelect"><option value="" disabled selected>请先拉取模型</option></select></div>
+        <div class="font-slider-container"><div class="font-slider-header">模型温度 <span id="tempVal">0.7</span></div><input type="range" min="0" max="20" value="7" id="tempInput" oninput="updateTemperature(this.value)"></div>
+        <div class="font-slider-container"><div class="font-slider-header">携带上下文 <span id="contextVal">10</span></div><input type="range" min="0" max="50" value="10" id="contextInput" oninput="updateContextLimit(this.value)"></div>
+        <div class="preset-section"><button class="btn-save-preset" onclick="saveApiPreset()">保存当前为预设</button><div class="preset-title">API预设</div><div class="preset-list" id="apiPresetList"></div></div>
+    </div>
+    <div class="sub-page" id="voiceSettingsPage">
+        <div class="theme-header"><span class="close-theme" onclick="toggleVoiceSettingsPage(false)">&lsaquo; 返回</span><h2>语音设置</h2><span style="width: 32px"></span></div>
+        <div style="padding: 20px; text-align: center; color: #666;">语音设置功能开发中...</div>
+    </div>
+    <div class="sub-page" id="dataPage">
+        <div class="theme-header"><span class="close-theme" onclick="toggleDataPage(false)">&lsaquo; 返回</span><h2>数据管理</h2><span style="width: 32px"></span></div>
+        <div class="theme-list">
+            <div class="theme-item" onclick="exportData()">导出数据</div>
+            <div class="theme-item" onclick="document.getElementById('importFileInput').click()">导入数据</div>
+            <div class="theme-item" onclick="resetData()" style="color: #ff6b6b;">初始化数据</div>
+        </div>
+        <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(this)">
+    </div>
+    <div class="theme-overlay" id="musicListModal">
+        <div class="music-list-header"><span class="close-theme" onclick="toggleMusicList(false)">&lsaquo; 关闭</span><h2>播放列表</h2><span class="add-music-btn" onclick="openAddMusicModal()">+</span></div>
+        <div class="music-list" id="musicListContainer"></div>
+    </div>
+    <div class="modal-overlay" id="addMusicOverlay">
+        <div class="modal">
+            <h3>添加音乐</h3><input type="text" id="musicNameInput" placeholder="歌曲名称"><input type="text" id="musicArtistInput" placeholder="歌手"><input type="text" id="musicUrlInput" placeholder="音乐URL链接">
+            <div style="font-size:12px;color:#666;margin:5px 0;">或上传文件</div><button class="btn-save-preset" onclick="document.getElementById('musicFileInput').click()">上传音频文件</button><input type="file" id="musicFileInput" accept="audio/*">
+            <button class="btn-save-preset" style="margin-top:10px;background:#88acc6;" onclick="document.getElementById('lrcFileInput').click()">上传歌词文件(LRC/TXT)</button><input type="file" id="lrcFileInput" accept=".lrc,.txt">
+            <div id="fileInfo" style="font-size:10px;color:#666;margin-top:5px;"></div>
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;"><button onclick="closeAddMusicModal()" style="background: #ccc;">取消</button><button onclick="confirmAddMusic()">添加</button></div>
+        </div>
+    </div>
+    <div class="theme-overlay" id="themePage">
+        <div class="theme-header"><h2>主题设置</h2><span class="close-theme" onclick="toggleThemePage(false)">关闭</span></div>
+        <div class="theme-list"><div class="theme-item">显示界面 <span>&rsaquo;</span></div><div class="theme-item" onclick="toggleWallpaperPage(true)">桌面壁纸 <span>&rsaquo;</span></div><div class="theme-item" onclick="toggleIconPage(true)">图标管理 <span>&rsaquo;</span></div><div class="theme-item" onclick="toggleFontPage(true)">字体美化 <span>&rsaquo;</span></div></div>
+    </div>
+    <div class="sub-page" id="wallpaperPage">
+        <div class="theme-header"><span class="close-theme" onclick="toggleWallpaperPage(false)">&lsaquo; 返回</span><h2>桌面壁纸</h2><span style="width: 32px"></span></div>
+        <div class="theme-list"><div class="theme-item" onclick="toggleDarkMode()">开启深色模式<div class="toggle-switch" id="darkModeToggle"><div class="toggle-knob"></div></div></div><div class="theme-item" onclick="alert('动态壁纸功能正在开发中...')">更换动态壁纸 <span>&rsaquo;</span></div><div class="theme-item" onclick="openImageModal('body-bg')">更换桌面壁纸 <span>&rsaquo;</span></div></div>
+    </div>
+    <div class="sub-page" id="iconPage">
+        <div class="theme-header"><span class="close-theme" onclick="toggleIconPage(false)">&lsaquo; 返回</span><h2>图标管理</h2><span style="width: 32px"></span></div>
+        <div class="icon-manage-grid" id="iconManageGrid"></div>
+        <div class="preset-section"><button class="btn-save-preset" onclick="savePreset()">保存当前为预设</button><div class="preset-title">我的预设</div><div class="preset-list" id="presetList"></div></div>
+    </div>
+    <div class="sub-page" id="fontPage">
+        <div class="theme-header"><span class="close-theme" onclick="toggleFontPage(false)">&lsaquo; 返回</span><h2>字体美化</h2><span style="width: 32px"></span></div>
+        <div class="font-dropdown" id="fontDropdown">
+            <div class="font-dropdown-header" onclick="toggleFontDropdown(event)"><span>选择预设字体</span><span class="arrow-icon">▼</span></div>
+            <div class="font-dropdown-content"><div class="font-option" onclick="applyFont('system-ui')">系统默认</div><div class="font-option" onclick="applyFont('Times New Roman, serif')">衬线体 (Serif)</div><div class="font-option" onclick="applyFont('Courier New, monospace')">等宽体 (Mono)</div><div class="font-option" onclick="applyFont('Arial, sans-serif')">无衬线 (Sans)</div><div class="font-option" onclick="applyFont('cursive')">手写体 (Cursive)</div></div>
+        </div>
+        <div class="font-slider-container"><div class="font-slider-header">自定义字体 (URL/文件)</div><input type="text" class="custom-font-input" id="customFontUrl" placeholder="输入字体URL并回车" onchange="loadCustomFont(this.value)"><button class="btn-save-preset" onclick="document.getElementById('fontFileInput').click()">上传字体文件 (.ttf/.woff)</button><input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2" onchange="handleFontFileUpload(this)"></div>
+        <div class="font-slider-container"><div class="font-slider-header">字体大小 <span id="fontScaleVal">100%</span></div><input type="range" min="50" max="200" value="100" id="fontScaleInput" oninput="updateFontScale(this.value)"></div>
+        <div class="font-slider-container"><div class="font-slider-header">界面文字/图标颜色</div><div style="display: flex; align-items: center; justify-content: space-between;"><span>选择颜色</span><input type="color" id="uiColorInput" value="#333333" onchange="updateUiColor(this.value)"></div></div>
+        <div class="preset-section"><button class="btn-save-preset" onclick="saveFontPreset()">保存当前字体预设</button><div class="preset-title">字体预设</div><div class="preset-list" id="fontPresetList"></div></div>
+    </div>
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3 id="modalTitle">编辑内容</h3><input type="text" id="modalInput" placeholder="输入链接或文字">
+            <div id="imageControls"><div style="margin-bottom: 10px; color: #888; font-size: 12px;">或</div><button onclick="document.getElementById('fileInput').click()">上传本地图片</button></div>
+            <input type="file" id="fileInput" accept="image/*">
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;"><button onclick="closeModal()" style="background: #ccc;">取消</button><button onclick="saveChanges()">保存</button></div>
+        </div>
+    </div>
+    <script>
+        const defaultData = {
+            topWidget: 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=300&q=80',
+            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+            profileBg: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=500&q=80',
+            vinylCover: 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?auto=format&fit=crop&w=200&q=80',
+            nickname: '幼稚栀', wechatId: '771581955', signature: '你的存在 即是我所爱ovo!!', location: '京都 江城',
+            cakeBg: 'https://images.unsplash.com/photo-1588195538326-c5f1f23fa431?auto=format&fit=crop&w=500&q=80',
+            cakeTitle: 'Good luck.', cakeSubtitle: '✧ Every single day counts.'
+        };
+        const appIcons = [
+            { id: 'icon-diary', name: '日记' }, { id: 'icon-ins', name: 'Ins' }, { id: 'icon-wechat', name: '微信' }, { id: 'icon-companion', name: '陪伴' },
+            { id: 'icon-pet', name: '萌宠' }, { id: 'icon-shopping', name: '购物' }, { id: 'icon-check', name: '查岗' }, { id: 'icon-couple', name: '情侣空间' },
+            { id: 'icon-memory', name: '记忆' }, { id: 'icon-world', name: '世界书' }, { id: 'icon-theme', name: '主题' }, { id: 'icon-settings', name: '设置' }
+        ];
+        let currentEditKey='', isChangingIcon=false, playlist=[], currentSongIndex=0, tempAudioFile=null, tempLrcContent=null;
+        const audio = document.getElementById('audio-player');
+        function updateAppIcon(id, src) {
+            const el = document.getElementById(id);
+            if (el) { el.style.backgroundImage = `url(${src})`; el.innerHTML = ''; el.style.backgroundSize = 'cover'; el.style.backgroundPosition = 'center'; }
+        }
+        window.onload = () => {
+            Object.keys(defaultData).forEach(key => { const saved = localStorage.getItem(key); updateDOM(key, saved || defaultData[key]); });
+            const bg = localStorage.getItem('body-bg'); if(bg) updateDOM('body-bg', bg);
+            if(localStorage.getItem('darkMode') === 'true') { document.body.classList.add('dark-mode'); document.getElementById('darkModeToggle').classList.add('on'); }
+            appIcons.forEach(app => { const savedIcon = localStorage.getItem(app.id); if(savedIcon) updateAppIcon(app.id, savedIcon); });
+            const savedFontFamily = localStorage.getItem('currentFontFamily'); if(savedFontFamily) document.documentElement.style.setProperty('--current-font', savedFontFamily);
+            const savedFontScale = localStorage.getItem('currentFontScale');
+            if(savedFontScale) { document.documentElement.style.setProperty('--font-scale', savedFontScale + '%'); document.getElementById('fontScaleInput').value = savedFontScale; document.getElementById('fontScaleVal').innerText = savedFontScale + '%'; }
+            const savedUiColor = localStorage.getItem('uiColor'); if(savedUiColor) { updateUiColor(savedUiColor); document.getElementById('uiColorInput').value = savedUiColor; }
+            document.getElementById('apiUrlInput').value = localStorage.getItem('apiUrl') || '';
+            document.getElementById('apiKeyInput').value = localStorage.getItem('apiKey') || '';
+            updateTemperature((localStorage.getItem('apiTemp') || '0.7') * 10);
+            updateContextLimit(localStorage.getItem('apiContext') || '10');
+            renderApiPresets(); renderPresets(); renderFontPresets();
+            const savedPlaylist = JSON.parse(localStorage.getItem('musicPlaylist') || '[]');
+            if(savedPlaylist.length > 0) { playlist = savedPlaylist; currentSongIndex = parseInt(localStorage.getItem('currentSongIndex') || '0'); loadSong(currentSongIndex, false); }
+            updateTime(); setInterval(updateTime, 1000); initBattery(); renderWorldBooks();
+            document.addEventListener('click', function(event) {
+                const dropdown = document.getElementById('fontDropdown');
+                if (!dropdown.querySelector('.font-dropdown-header').contains(event.target)) dropdown.classList.remove('open');
+            });
+        };
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').innerText = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            const month = now.getMonth() + 1, date = now.getDate(), week = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][now.getDay()];
+            const dateEl = document.getElementById('widget-date-display'), weekEl = document.getElementById('widget-week-display');
+            if(dateEl) dateEl.innerText = `${month}月${date}日`; if(weekEl) weekEl.innerText = week;
+        }
+        function initBattery() {
+            if (navigator.getBattery) {
+                navigator.getBattery().then(battery => {
+                    const update = () => {
+                        const level = Math.floor(battery.level * 100);
+                        document.getElementById('battery-text').innerText = level + '%';
+                        document.getElementById('battery-level').style.width = level + '%';
+                        const widgetBat = document.getElementById('widget-battery-level');
+                        if(widgetBat) widgetBat.style.width = level + '%';
+                    };
+                    update(); battery.addEventListener('levelchange', update);
+                });
+            }
+        }
+        function openImageModal(key) {
+            currentEditKey = key; isChangingIcon = false;
+            document.getElementById('modalTitle').innerText = "更换图片"; document.getElementById('imageControls').style.display = 'block';
+            document.getElementById('modalInput').value = ''; document.getElementById('modalOverlay').style.display = 'flex';
+        }
+        function openTextModal(key) {
+            currentEditKey = key; isChangingIcon = false;
+            document.getElementById('modalTitle').innerText = "修改文字"; document.getElementById('imageControls').style.display = 'none';
+            document.getElementById('modalInput').value = document.getElementById(key).innerText.replace('@', ''); document.getElementById('modalOverlay').style.display = 'flex';
+        }
+        function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+        function saveChanges() {
+            const val = document.getElementById('modalInput').value;
+            if (val) {
+                if(isChangingIcon) { localStorage.setItem(currentEditKey, val); updateAppIcon(currentEditKey, val); renderIconGrid(); }
+                else { localStorage.setItem(currentEditKey, val); updateDOM(currentEditKey, val); }
+            }
+            closeModal();
+        }
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const base64 = event.target.result;
+                    if(isChangingIcon) { localStorage.setItem(currentEditKey, base64); updateAppIcon(currentEditKey, base64); renderIconGrid(); }
+                    else { localStorage.setItem(currentEditKey, base64); updateDOM(currentEditKey, base64); }
+                    closeModal(); e.target.value = ''; 
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        function updateDOM(key, value) {
+            const el = document.getElementById(key); if (!el) return;
+            if (['topWidget', 'avatar', 'profileBg', 'vinylCover', 'body-bg', 'cakeBg'].includes(key)) el.style.backgroundImage = `url(${value})`; else el.innerText = value;
+        }
+        function toggleThemePage(show) { togglePage('themePage', show); }
+        function toggleSettingsPage(show) { togglePage('settingsPage', show); }
+        function toggleWallpaperPage(show) { togglePage('wallpaperPage', show); }
+        function toggleIconPage(show) { if(show) renderIconGrid(); togglePage('iconPage', show); }
+        function toggleFontPage(show) { if(show) renderFontPresets(); togglePage('fontPage', show); }
+        function toggleDataPage(show) { togglePage('dataPage', show); }
+        function toggleApiSettingsPage(show) { togglePage('apiSettingsPage', show); }
+        function toggleVoiceSettingsPage(show) { togglePage('voiceSettingsPage', show); }
+        function toggleWechatPage(show) { togglePage('wechatAppPage', show); }
+        function toggleWorldBookPage(show) { togglePage('worldBookPage', show); renderWorldBooks(); }
+        function togglePage(id, show) {
+            const page = document.getElementById(id);
+            if(show) { page.style.display = 'flex'; setTimeout(() => page.classList.add('active'), 10); }
+            else { page.classList.remove('active'); setTimeout(() => page.style.display = 'none', 400); }
+        }
+        audio.addEventListener('timeupdate', () => { document.getElementById('musicProgress').value = (audio.currentTime / audio.duration) * 100 || 0; updateLyrics(audio.currentTime); });
+        audio.addEventListener('ended', () => changeTrack(1));
+        function toggleMusicFlip(event) {
+            if (event.target.closest('.music-controls') || event.target.closest('.progress-bar') || event.target.closest('.music-menu-btn')) return;
+            document.getElementById('music-card').classList.toggle('flipped');
+        }
+        function togglePlay() {
+            if(playlist.length === 0) return alert("请先添加音乐！");
+            if(!audio.src || audio.src === window.location.href) { loadSong(currentSongIndex, true); return; }
+            const btn = document.getElementById('play-path'), vinyl = document.getElementById('vinylCover');
+            if(audio.paused) { audio.play(); vinyl.classList.add('playing'); btn.setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'); }
+            else { audio.pause(); vinyl.classList.remove('playing'); btn.setAttribute('d', 'M5 3l14 9-14 9V3z'); }
+        }
+        function changeTrack(direction) {
+            if(playlist.length === 0) return;
+            currentSongIndex = (currentSongIndex + direction + playlist.length) % playlist.length; loadSong(currentSongIndex, true);
+        }
+        function loadSong(index, autoPlay) {
+            if(index < 0 || index >= playlist.length) return;
+            const song = playlist[index]; audio.src = song.src; localStorage.setItem('currentSongIndex', index);
+            document.getElementById('musicTrackInfo').innerText = song.title + (song.artist ? ` - ${song.artist}` : '');
+            currentLyrics = parseLyrics(song.lyrics || ""); renderLyrics(); renderMusicList(); 
+            if(autoPlay) {
+                audio.play().then(() => { document.getElementById('vinylCover').classList.add('playing'); document.getElementById('play-path').setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z'); })
+                .catch(e => { console.log("Playback failed:", e); document.getElementById('vinylCover').classList.remove('playing'); });
+            } else { document.getElementById('vinylCover').classList.remove('playing'); document.getElementById('play-path').setAttribute('d', 'M5 3l14 9-14 9V3z'); }
+        }
+        function seekAudio(val) { if(audio.duration) audio.currentTime = (val / 100) * audio.duration; }
+        let currentLyrics = [];
+        function parseLyrics(lrcText) {
+            if(!lrcText) return []; if(!lrcText.match(/\[\d{2}:\d{2}/)) return lrcText.split('\n').map(line => ({ time: -1, text: line }));
+            const lines = lrcText.split('\n'), result = [], timeExp = /\[(\d{2}):(\d{2})(\.\d{2,3})?\]/;
+            lines.forEach(line => {
+                const match = timeExp.exec(line);
+                if(match && line.replace(timeExp, '').trim()) result.push({ time: parseInt(match[1]) * 60 + parseInt(match[2]) + (parseFloat(match[3] || 0)), text: line.replace(timeExp, '').trim() });
+            });
+            return result;
+        }
+        function renderLyrics() {
+            const container = document.getElementById('lyricContainer'); container.innerHTML = '';
+            if(currentLyrics.length === 0) { container.innerHTML = '<div class="lyric-line">暂无歌词</div>'; return; }
+            currentLyrics.forEach((line, idx) => container.insertAdjacentHTML('beforeend', `<div class="lyric-line" id="lyric-${idx}">${line.text}</div>`));
+        }
+        function updateLyrics(currentTime) {
+            if(currentLyrics.length === 0 || currentLyrics[0].time === -1) return;
+            let activeIdx = -1;
+            for(let i = 0; i < currentLyrics.length; i++) { if(currentTime >= currentLyrics[i].time) activeIdx = i; else break; }
+            if(activeIdx !== -1) {
+                document.querySelectorAll('.lyric-line').forEach(l => l.classList.remove('active'));
+                const el = document.getElementById(`lyric-${activeIdx}`); if(el) { el.classList.add('active'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            }
+        }
+        function toggleMusicList(show) {
+            const modal = document.getElementById('musicListModal');
+            if(show) { renderMusicList(); modal.style.display = 'flex'; setTimeout(() => modal.classList.add('active'), 10); }
+            else { modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 400); }
+        }
+        function renderMusicList() {
+            const list = document.getElementById('musicListContainer'); list.innerHTML = '';
+            if(playlist.length === 0) { list.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.6;color:#333;">暂无音乐，点击右上角添加</div>'; return; }
+            playlist.forEach((song, idx) => {
+                list.insertAdjacentHTML('beforeend', `<div class="music-item ${idx === currentSongIndex ? 'active' : ''}"><div class="music-info" onclick="playFromList(${idx})"><span class="music-title">${song.title}</span><span class="music-artist">${song.artist}</span></div><div class="music-actions"><button class="btn-small btn-edit" onclick="editSong(${idx})">编辑</button><button class="btn-small btn-delete" onclick="deleteSong(${idx})">删除</button></div></div>`);
+            });
+        }
+        function playFromList(idx) { currentSongIndex = idx; loadSong(idx, true); }
+        function deleteSong(idx) {
+            if(!confirm("确定删除这首歌吗？")) return;
+            playlist.splice(idx, 1); localStorage.setItem('musicPlaylist', JSON.stringify(playlist)); renderMusicList();
+            if(idx === currentSongIndex) { audio.pause(); audio.src = ''; } else if (idx < currentSongIndex) currentSongIndex--;
+        }
+        function editSong(idx) {
+            const song = playlist[idx], newTitle = prompt("修改歌名", song.title), newArtist = prompt("修改歌手", song.artist);
+            if(newTitle) song.title = newTitle; if(newArtist) song.artist = newArtist;
+            localStorage.setItem('musicPlaylist', JSON.stringify(playlist)); renderMusicList();
+        }
+        function openAddMusicModal() {
+            document.getElementById('addMusicOverlay').style.display = 'flex'; document.getElementById('musicNameInput').value = '';
+            document.getElementById('musicArtistInput').value = ''; document.getElementById('musicUrlInput').value = '';
+            document.getElementById('musicFileInput').value = ''; document.getElementById('lrcFileInput').value = '';
+            tempAudioFile = null; tempLrcContent = null; document.getElementById('fileInfo').innerText = '';
+        }
+        function closeAddMusicModal() { document.getElementById('addMusicOverlay').style.display = 'none'; }
+        document.getElementById('musicFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) { tempAudioFile = URL.createObjectURL(file); document.getElementById('fileInfo').innerText += ` 已选择音频: ${file.name} `; if(!document.getElementById('musicNameInput').value) document.getElementById('musicNameInput').value = file.name.replace(/\.[^/.]+$/, ""); }
+        });
+        document.getElementById('lrcFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) { const reader = new FileReader(); reader.onload = function(evt) { tempLrcContent = evt.target.result; document.getElementById('fileInfo').innerText += ` 已选择歌词: ${file.name} `; }; reader.readAsText(file); }
+        });
+        function confirmAddMusic() {
+            const title = document.getElementById('musicNameInput').value || '未知歌曲', artist = document.getElementById('musicArtistInput').value || '未知歌手', url = document.getElementById('musicUrlInput').value;
+            let src = url; const fileInput = document.getElementById('musicFileInput');
+            if (!src && fileInput.files.length > 0) src = URL.createObjectURL(fileInput.files[0]);
+            if(!src) { alert("请提供URL或上传音频文件！"); return; }
+            playlist.push({ title: title, artist: artist, src: src, lyrics: tempLrcContent || "" });
+            if (!src.startsWith('blob:')) { try { localStorage.setItem('musicPlaylist', JSON.stringify(playlist)); } catch(e) { console.log("Storage full"); } }
+            else alert("注意：本地上传的音频仅本次会话有效，刷新页面后需重新上传。");
+            renderMusicList(); closeAddMusicModal(); if(playlist.length === 1) loadSong(0, false);
+        }
+        function changeAppIcon(id) {
+            currentEditKey = id; isChangingIcon = true; document.getElementById('modalTitle').innerText = "更换图标";
+            document.getElementById('imageControls').style.display = 'block'; document.getElementById('modalInput').value = ''; document.getElementById('modalOverlay').style.display = 'flex';
+        }
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode'); const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark); const btn = document.getElementById('darkModeToggle');
+            if(isDark) btn.classList.add('on'); else btn.classList.remove('on');
+        }
+        function updateUiColor(color) {
+            document.documentElement.style.setProperty('--ui-color', color); document.documentElement.style.setProperty('--text-color', color); localStorage.setItem('uiColor', color);
+        }
+        function toggleFontDropdown(event) { if(event) event.stopPropagation(); document.getElementById('fontDropdown').classList.toggle('open'); }
+        function applyFont(fontFamily) { document.documentElement.style.setProperty('--current-font', fontFamily); localStorage.setItem('currentFontFamily', fontFamily); document.getElementById('fontDropdown').classList.remove('open'); }
+        function updateFontScale(val) { document.documentElement.style.setProperty('--font-scale', val + '%'); document.getElementById('fontScaleVal').innerText = val + '%'; localStorage.setItem('currentFontScale', val); }
+        async function loadCustomFont(url) {
+            if(!url) return; const fontName = 'CustomFont_' + Date.now(), fontFace = new FontFace(fontName, `url(${url})`);
+            try { await fontFace.load(); document.fonts.add(fontFace); applyFont(fontName); alert("字体加载成功！"); } catch (e) { alert("字体加载失败"); }
+        }
+        function handleFontFileUpload(input) {
+            const file = input.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const fontName = 'LocalFont_' + Date.now(), fontFace = new FontFace(fontName, `url(${e.target.result})`);
+                    fontFace.load().then(function(loadedFace) { document.fonts.add(loadedFace); applyFont(fontName); alert("本地字体应用成功！"); }).catch(function(e) { alert("字体加载失败"); });
+                }; reader.readAsDataURL(file); input.value = '';
+            }
+        }
+        function getFontPresets() { return JSON.parse(localStorage.getItem('fontPresets') || '[]'); }
+        function saveFontPreset() {
+            const name = prompt("预设名称", "字体预设 " + (getFontPresets().length + 1)); if(!name) return;
+            const currentFont = getComputedStyle(document.documentElement).getPropertyValue('--current-font').trim(), data = { family: currentFont, scale: localStorage.getItem('currentFontScale') || '100' }, presets = getFontPresets();
+            presets.push({ id: Date.now(), name: name, data: data }); localStorage.setItem('fontPresets', JSON.stringify(presets)); renderFontPresets();
+        }
+        function useFontPreset(id) {
+            const presets = getFontPresets(), target = presets.find(p => p.id === id);
+            if(target) { applyFont(target.data.family); updateFontScale(target.data.scale); document.getElementById('fontScaleInput').value = target.data.scale; }
+        }
+        function deleteFontPreset(id) {
+            if(!confirm("删除此预设？")) return; const presets = getFontPresets().filter(p => p.id !== id);
+            localStorage.setItem('fontPresets', JSON.stringify(presets)); renderFontPresets();
+        }
+        function editFontPreset(id) {
+            const presets = getFontPresets(), target = presets.find(p => p.id === id);
+            if(target) { const newName = prompt("重命名预设", target.name); if(newName) { target.name = newName; localStorage.setItem('fontPresets', JSON.stringify(presets)); renderFontPresets(); } }
+        }
+        function renderFontPresets() {
+            const list = document.getElementById('fontPresetList'); list.innerHTML = ''; const presets = getFontPresets();
+            if(presets.length === 0) list.innerHTML = '<div style="padding:10px;text-align:center;font-size:12px;opacity:0.6;">暂无字体预设</div>';
+            presets.forEach(p => list.insertAdjacentHTML('beforeend', `<div class="preset-item"><span>${p.name}</span><div class="preset-actions"><button class="btn-apply" onclick="useFontPreset(${p.id})">使用</button><button class="btn-edit" onclick="editFontPreset(${p.id})">编辑</button><button class="btn-delete" onclick="deleteFontPreset(${p.id})">删除</button></div></div>`));
+        }
+        function renderIconGrid() {
+            const grid = document.getElementById('iconManageGrid'); grid.innerHTML = '';
+            appIcons.forEach(app => {
+                const saved = localStorage.getItem(app.id), bgStyle = saved ? `background-image: url(${saved})` : '', html = `<div class="manage-item" onclick="changeAppIcon('${app.id}')"><div class="manage-icon" style="${bgStyle}">${saved ? '' : document.getElementById(app.id).innerHTML}</div><span class="manage-name">${app.name}</span></div>`;
+                grid.insertAdjacentHTML('beforeend', html);
+            });
+        }
+        function getPresets() { return JSON.parse(localStorage.getItem('iconPresets') || '[]'); }
+        function savePreset() {
+            const name = prompt("请输入预设名称", "我的预设 " + (getPresets().length + 1)); if(!name) return;
+            const currentIcons = {}; appIcons.forEach(app => { const val = localStorage.getItem(app.id); if(val) currentIcons[app.id] = val; });
+            const presets = getPresets(); presets.push({ id: Date.now(), name: name, data: currentIcons }); localStorage.setItem('iconPresets', JSON.stringify(presets)); renderPresets();
+        }
+        function loadPreset(id) {
+            const presets = getPresets(), target = presets.find(p => p.id === id);
+            if(target) { appIcons.forEach(app => localStorage.removeItem(app.id)); Object.keys(target.data).forEach(key => localStorage.setItem(key, target.data[key])); location.reload(); }
+        }
+        function deletePreset(id) {
+            if(!confirm("确定删除该预设吗？")) return; const presets = getPresets().filter(p => p.id !== id);
+            localStorage.setItem('iconPresets', JSON.stringify(presets)); renderPresets();
+        }
+        function renderPresets() {
+            const list = document.getElementById('presetList'); list.innerHTML = ''; const presets = getPresets();
+            if(presets.length === 0) list.innerHTML = '<div style="padding:10px;text-align:center;font-size:12px;opacity:0.6;">暂无预设</div>';
+            presets.forEach(p => list.insertAdjacentHTML('beforeend', `<div class="preset-item"><span>${p.name}</span><div class="preset-actions"><button class="btn-apply" onclick="loadPreset(${p.id})">使用</button><button class="btn-delete" onclick="deletePreset(${p.id})">删除</button></div></div>`));
+        }
+        function exportData() {
+            const data = JSON.stringify(localStorage), blob = new Blob([data], {type: 'application/json'}), url = URL.createObjectURL(blob), a = document.createElement('a');
+            a.href = url; a.download = 'matcha_phone_backup.json'; a.click();
+        }
+        function importData(input) {
+            const file = input.files[0]; if(!file) return;
+            const reader = new FileReader(); reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result); localStorage.clear();
+                    for (let key in data) localStorage.setItem(key, data[key]);
+                    alert("数据导入成功，页面将刷新。"); location.reload();
+                } catch(e) { alert("导入失败，文件格式错误。"); }
+            }; reader.readAsText(file);
+        }
+        function resetData() { if(confirm("确定要清空所有数据并恢复出厂设置吗？此操作不可逆！")) { localStorage.clear(); location.reload(); } }
+        function updateTemperature(val) { document.getElementById('tempVal').innerText = (val / 10).toFixed(1); localStorage.setItem('apiTemp', (val / 10).toFixed(1)); }
+        function updateContextLimit(val) { document.getElementById('contextVal').innerText = val; localStorage.setItem('apiContext', val); }
+        async function fetchModels() {
+            const url = document.getElementById('apiUrlInput').value.replace(/\/$/, ""), key = document.getElementById('apiKeyInput').value;
+            if(!url || !key) return alert("请输入完整API信息");
+            try {
+                const res = await fetch(`${url}/v1/models`, { headers: { 'Authorization': `Bearer ${key}` } }), data = await res.json(), select = document.getElementById('modelSelect');
+                select.innerHTML = ''; data.data.forEach(m => { const opt = document.createElement('option'); opt.value = m.id; opt.innerText = m.id; select.appendChild(opt); });
+                localStorage.setItem('apiUrl', url); localStorage.setItem('apiKey', key); alert("模型拉取成功！");
+            } catch(e) { alert("拉取失败，请检查网址和密钥"); }
+        }
+        function getApiPresets() { return JSON.parse(localStorage.getItem('apiPresets') || '[]'); }
+        function saveApiPreset() {
+            const name = prompt("预设名称"); if(!name) return;
+            const data = { url: document.getElementById('apiUrlInput').value, key: document.getElementById('apiKeyInput').value, model: document.getElementById('modelSelect').value, temp: document.getElementById('tempInput').value, ctx: document.getElementById('contextInput').value };
+            const presets = getApiPresets(); presets.push({ id: Date.now(), name, data }); localStorage.setItem('apiPresets', JSON.stringify(presets)); renderApiPresets();
+        }
+        function loadApiPreset(id) {
+            const p = getApiPresets().find(x => x.id === id);
+            if(p) {
+                document.getElementById('apiUrlInput').value = p.data.url; document.getElementById('apiKeyInput').value = p.data.key;
+                updateTemperature(p.data.temp); document.getElementById('tempInput').value = p.data.temp;
+                updateContextLimit(p.data.ctx); document.getElementById('contextInput').value = p.data.ctx;
+                fetchModels().then(() => { document.getElementById('modelSelect').value = p.data.model; });
+            }
+        }
+        function deleteApiPreset(id) { if(!confirm("删除？")) return; const presets = getApiPresets().filter(p => p.id !== id); localStorage.setItem('apiPresets', JSON.stringify(presets)); renderApiPresets(); }
+        function renderApiPresets() {
+            const list = document.getElementById('apiPresetList'); list.innerHTML = '';
+            getApiPresets().forEach(p => list.insertAdjacentHTML('beforeend', `<div class="preset-item"><span>${p.name}</span><div class="preset-actions"><button class="btn-apply" onclick="loadApiPreset(${p.id})">使用</button><button class="btn-delete" onclick="deleteApiPreset(${p.id})">删除</button></div></div>`));
+        }
+
+        // 世界书逻辑
+        function openAddWorldBook() { document.getElementById('addWorldBookOverlay').style.display='flex'; document.getElementById('wbName').value=''; document.getElementById('wbContent').value=''; }
+        function saveWorldBook() {
+            const name = document.getElementById('wbName').value, type = document.getElementById('wbType').value;
+            const trigger = document.getElementById('wbTrigger').value, priority = document.getElementById('wbPriority').value;
+            const content = document.getElementById('wbContent').value;
+            if(!name) return alert("名称不能为空");
+            const books = JSON.parse(localStorage.getItem('worldBooks') || '[]');
+            books.push({ id: Date.now(), name, type, trigger, priority, content });
+            localStorage.setItem('worldBooks', JSON.stringify(books));
+            document.getElementById('addWorldBookOverlay').style.display='none'; renderWorldBooks();
+        }
+        function deleteWorldBook(id) {
+            if(!confirm("删除此条目？")) return;
+            const books = JSON.parse(localStorage.getItem('worldBooks') || '[]');
+            localStorage.setItem('worldBooks', JSON.stringify(books.filter(b => b.id !== id))); renderWorldBooks();
+        }
+        function renderWorldBooks() {
+            const list = document.getElementById('worldBookList'); list.innerHTML = '';
+            const books = JSON.parse(localStorage.getItem('worldBooks') || '[]');
+            if(books.length===0) list.innerHTML = '<div style="opacity:0.6;text-align:center;">暂无世界书条目</div>';
+            books.forEach(b => {
+                const typeText = b.type==='global'?'全局':'局部', trigText = b.trigger==='always'?'始终':'关键词';
+                list.insertAdjacentHTML('beforeend', `
+                    <div class="wb-item">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                            <span style="font-weight:bold;">${b.name}</span>
+                            <div>
+                                <span class="world-book-tag tag-${b.priority}">${b.priority==='high'?'高':(b.priority==='mid'?'中':'低')}</span>
+                                <span class="world-book-tag ${b.type==='global'?'tag-global':'tag-local'}">${typeText}</span>
+                            </div>
+                        </div>
+                        <div style="font-size:10px;opacity:0.7;margin-bottom:5px;">触发: ${trigText}</div>
+                        <div style="font-size:12px;opacity:0.9;white-space:pre-wrap;">${b.content}</div>
+                        <div style="text-align:right;margin-top:5px;"><button class="btn-small btn-delete" onclick="deleteWorldBook(${b.id})">删除</button></div>
+                    </div>
+                `);
+            });
+        }
+    </script>
+</body>
+</html>
+
